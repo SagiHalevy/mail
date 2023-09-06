@@ -11,8 +11,8 @@ from .models import User, Email
 
 
 def index(request):
-
     # Authenticated users view their inbox
+
     if request.user.is_authenticated:
         return render(request, "mail/inbox.html")
 
@@ -20,15 +20,14 @@ def index(request):
     else:
         return HttpResponseRedirect(reverse("login"))
 
-
 @csrf_exempt
 @login_required
 def compose(request):
-
+    
     # Composing a new email must be via POST
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
-
+    
     # Check recipient emails
     data = json.loads(request.body)
     emails = [email.strip() for email in data.get("recipients").split(",")]
@@ -36,7 +35,7 @@ def compose(request):
         return JsonResponse({
             "error": "At least one recipient required."
         }, status=400)
-
+    
     # Convert email addresses to users
     recipients = []
     for email in emails:
@@ -47,11 +46,11 @@ def compose(request):
             return JsonResponse({
                 "error": f"User with email {email} does not exist."
             }, status=400)
-
+    
     # Get contents of email
     subject = data.get("subject", "")
     body = data.get("body", "")
-
+    
     # Create one email for each recipient, plus sender
     users = set()
     users.add(request.user)
@@ -68,7 +67,7 @@ def compose(request):
         for recipient in recipients:
             email.recipients.add(recipient)
         email.save()
-
+   
     return JsonResponse({"message": "Email sent successfully."}, status=201)
 
 
@@ -116,6 +115,7 @@ def email(request, email_id):
         if data.get("read") is not None:
             email.read = data["read"]
         if data.get("archived") is not None:
+            print(data["archived"])
             email.archived = data["archived"]
         email.save()
         return HttpResponse(status=204)
